@@ -1,3 +1,10 @@
+"""
+Eric Uehling
+4.30.24
+
+Description: Clean the data into a single CSV file.
+"""
+
 import pandas as pd
 import os
 
@@ -95,6 +102,7 @@ def process_game_data(data):
     data['length'] = (data['game_length'] / 60).round(3)  # Convert to minutes
 
     data = calculate_metrics(data)
+    data = process_champ_ids(data)
 
     # Convert 'result' to 0 for 'LOSE' and 1 for 'WIN'
     data['win'] = data['result'].apply(lambda x: 1 if x == 'WIN' else 0)
@@ -123,7 +131,7 @@ def process_game_data(data):
     data['dmg_per_gold'] = (data['dmg'] / data['gold']).round(3)
 
     # Define columns to keep as per desired output
-    columns_to_keep = ['position', 'op_score', 'win', 'length', 
+    columns_to_keep = ['champ', 'position', 'op_score', 'win', 'length', 
                        'kill', 'death', 'assist', 'kda',
                        'dmg', 'magic_dmg', 'ad_dmg', 'all_dmg', 
                        'dmg_taken', 'ad_dmg_taken', 'mitigated_dmg', 'total_heal', 
@@ -137,23 +145,25 @@ def process_game_data(data):
                        'cs_diff', 'gold_diff', 'level_diff', 'dmg_taken_diff', 'dmg_diff']
     return data[columns_to_keep]
 
-
-def split_data_by_position(data, processed_data_dir):
-    """Split data by player position and save into separate CSV files."""
-    positions = ['TOP', 'JUNGLE', 'MID', 'ADC', 'SUPPORT']
-    os.makedirs(processed_data_dir, exist_ok=True)
-
-    # Check if 'position' column exists in the DataFrame
-    if 'position' in data.columns:
-        for position in positions:
-            position_data = data[data['position'] ==
-                                 position].drop(columns=['position'])
-            csv_file = os.path.join(
-                processed_data_dir, f'{position.lower()}.csv')
-            position_data.to_csv(csv_file, index=False)
-            print(f"Data for position {position} written to '{csv_file}'")
-    else:
-        print("Error: 'position' column not found in the data.")
+def process_champ_ids(data):
+    """
+    Read in champions.csv and change champ_id column to champ, with the new value 
+    being the champion name instead of the key value.
+    """
+    # Load the champions data
+    champions_data = pd.read_csv('../data/processed/champions.csv')
+    
+    # Merge the original data with the champions data
+    # Now using 'champ_id' in 'data' which corresponds to 'key' in champions_data
+    data = pd.merge(data, champions_data[['key', 'champ_name']], left_on='champ_id', right_on='key', how='left')
+    
+    # Drop the old 'champ_id' column and 'key' column from the merged data
+    data = data.drop(columns=['champ_id', 'key'])
+    
+    # Rename 'champ_name' to 'champ'
+    data = data.rename(columns={'champ_name': 'champ'})
+    
+    return data
 
 
 def main():
@@ -173,8 +183,7 @@ def main():
     # Drop rows with missing values
     # processed_data = processed_data.dropna()
 
-    split_data_by_position(processed_data, processed_data_dir)
-
+    processed_data.to_csv(os.path.join(processed_data_dir, 'games.csv'), index=False)
 
 if __name__ == "__main__":
     main()

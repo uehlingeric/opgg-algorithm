@@ -193,7 +193,7 @@ def main():
     driver = setup_webdriver()
 
     # URL for the leaderboard
-    leaderboard_url = 'https://www.op.gg/leaderboards/tier?region=kr&tier=diamond&page=1'
+    leaderboard_url = 'https://www.op.gg/leaderboards/tier?region=na&tier=master&page=1'
 
     # Navigate to the leaderboard and extract summoner names
     navigate_to_url(driver, leaderboard_url)

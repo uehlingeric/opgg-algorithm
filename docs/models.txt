@@ -1,3 +1,0 @@
-opgg predictor 
-percentage win 
-performance distribution
