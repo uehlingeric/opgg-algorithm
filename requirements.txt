@@ -3,3 +3,8 @@ numpy
 matplotlib
 seaborn
 scikit-learn
+scipy.stats
+statsmodels
+keras
+joblib
+tensorflow
